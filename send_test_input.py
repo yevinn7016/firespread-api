@@ -1,6 +1,6 @@
 import requests
 
-url = "http://127.0.0.1:8000/input"
+url = "https://firespread-api.onrender.com/input"  # 변경된 주소!
 data = {
     "grid_id": 10001,
     "lat_min": 36.95,
