@@ -4,7 +4,7 @@ import firebase_admin
 
 # 초기화
 if not firebase_admin._apps:
-    cred = credentials.Certificate("firespreadapp-firebase-adminsdk-fbsvc-5acff07d40.json")  # 파일명에 맞게
+    cred = credentials.Certificate("firebase-key.json")  # 파일명에 맞게
     initialize_app(cred)
 db = firestore.client()
 
