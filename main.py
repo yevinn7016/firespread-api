@@ -30,12 +30,16 @@ def check_input():
     else:
         return {}
 
+@app.post("/reset_input")
+def reset_input():
+    input_queue.clear()
+    return {"status": "queue reset", "length": len(input_queue)}
+
 @app.post("/upload_result")
 async def upload_result(request: Request):
     try:
         data = await request.json()
 
-        # 🔍 디버깅 로그
         print("📥 [upload_result] 데이터 수신:", type(data))
         print("📥 내용:", data)
 
@@ -60,7 +64,6 @@ async def upload_result(request: Request):
         print("🧩 격자 수:", len(grid_results))
         print("📊 중요 피처 Top3:", global_top3)
 
-        # 🔁 grid_id 기준 정리
         grids_map = {
             f"grid_{g['grid_id']}": {
                 "grid_id": g["grid_id"],
