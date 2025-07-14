@@ -33,38 +33,54 @@ def check_input():
 # ✅ 예빈님 구조 반영: 전체 결과 저장
 @app.post("/upload_result")
 async def upload_result(request: Request):
-    data = await request.json()
+    try:
+        data = await request.json()
 
-    # 🔸 문제 ID: "1", "2", "3" 등
-    problem_id = str(data.get("problem_id", "unknown"))
-    grid_results = data.get("grid_results", [])
-    global_top3 = data.get("global_top3", [])
+        # ✅ 🔒 방어 코드: 리스트가 들어오면 예외 처리
+        if not isinstance(data, dict):
+            return {
+                "status": "error",
+                "message": "Expected JSON object (dict), but received a list",
+                "received_type": str(type(data)),
+                "hint": "loop.m에서 payload = struct(...) 형태로 보내야 함"
+            }, 400
 
-    # 🔁 grid_id를 기준으로 결과 묶기
-    grids_map = {
-        f"grid_{g['grid_id']}": {
-            "grid_id": g["grid_id"],
-            "center_lat": g["center_lat"],
-            "center_lon": g["center_lon"],
-            "lat_min": g["lat_min"],
-            "lat_max": g["lat_max"],
-            "lon_min": g["lon_min"],
-            "lon_max": g["lon_max"],
-            "pSpread": g["pSpread"]
+        # 🔸 문제 ID
+        problem_id = str(data.get("problem_id", "unknown"))
+        grid_results = data.get("grid_results", [])
+        global_top3 = data.get("global_top3", [])
+
+        # 🔁 grid_id별 정리
+        grids_map = {
+            f"grid_{g['grid_id']}": {
+                "grid_id": g["grid_id"],
+                "center_lat": g["center_lat"],
+                "center_lon": g["center_lon"],
+                "lat_min": g["lat_min"],
+                "lat_max": g["lat_max"],
+                "lon_min": g["lon_min"],
+                "lon_max": g["lon_max"],
+                "pSpread": g["pSpread"]
+            }
+            for g in grid_results
         }
-        for g in grid_results
-    }
 
-    # 🔸 Firestore 저장
-    doc_ref = db.collection("fire_results").document(problem_id)
-    doc_ref.set({
-        "grids": grids_map,
-        "global_feature_importance_top3": global_top3
-    })
+        # 🔸 Firestore 저장
+        doc_ref = db.collection("fire_results").document(problem_id)
+        doc_ref.set({
+            "grids": grids_map,
+            "global_feature_importance_top3": global_top3
+        })
 
-    return {
-        "status": "saved",
-        "problem_id": problem_id,
-        "grids_saved": len(grids_map),
-        "global_top3": global_top3
-    }
+        return {
+            "status": "saved",
+            "problem_id": problem_id,
+            "grids_saved": len(grids_map),
+            "global_top3": global_top3
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }, 500
